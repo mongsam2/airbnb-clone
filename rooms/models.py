@@ -29,12 +29,15 @@ class Room(CommonModel):
     def rating(room):
         count = room.reviews.count()
         if count == 0:
-            return "No Reviews"
+            return 0
         else:
             total_rating = 0
-            for review in room.reviews.all().values("rating"):
+            for review in room.reviews.all().values("rating"): # 딕셔너리 형태로 반환
                 total_rating += review["rating"]
             return round(total_rating / count, 2)
+    
+    def reviews_count(self):
+        return self.reviews.count()
     
 
 class Amenity(CommonModel):
