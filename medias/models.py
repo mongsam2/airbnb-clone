@@ -3,7 +3,7 @@ from common.models import CommonModel
 
 # Create your models here.
 class Photo(CommonModel):
-    file = models.ImageField()
+    file = models.URLField()
     description = models.CharField(max_length=140)
     room = models.ForeignKey("rooms.Room", on_delete=models.CASCADE, null=True, blank=True, related_name="photos")
     experience = models.ForeignKey("experiences.Experience", on_delete=models.CASCADE, null=True, blank=True, related_name="photos") 
@@ -12,7 +12,7 @@ class Photo(CommonModel):
         return "Photo file"
 
 class Video(CommonModel):
-    file = models.FileField()
+    file = models.URLField()
     experience = models.OneToOneField("experiences.Experience", on_delete=models.CASCADE, related_name="videos") 
 
     def __str__(self) -> str:
