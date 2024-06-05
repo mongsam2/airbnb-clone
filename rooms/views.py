@@ -1,14 +1,17 @@
 from django.shortcuts import render
 from django.db import transaction
+from django.utils import timezone
 
 # models
 from .models import Amenity, Room
 from categories.models import Category
+from bookings.models import Booking
 
 # serializers
 from .serializers import AmenitySerializer, RoomListSerializer, RoomDetailSerializer
 from reviews.serializers import ReviewSerializer
 from medias.serializers import PhotoSerializer
+from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer
 
 # rest framework
 from rest_framework.views import APIView
@@ -228,6 +231,32 @@ class RoomPhotos(APIView):
         serializer = PhotoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(room=room)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+        
+class RoomBookings(APIView):
+    
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, id):
+        try:
+            return Room.objects.get(id=id)
+        except Room.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, id):
+        room = self.get_object(id)
+        now = timezone.now().date()
+        bookings = Booking.objects.filter(room=room, kind=Booking.BookingKindChoices.ROOM, check_in__gt=now)
+        serializer = PublicBookingSerializer(bookings, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, id):
+        room = self.get_object(id)
+        serializer = CreateRoomBookingSerializer(data=request.data, context={"room_id":id})
+        if serializer.is_valid():
+            serializer.save(user=request.user, room=room, kind=Booking.BookingKindChoices.ROOM)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
